@@ -71,8 +71,8 @@ Resources:
         GroupName: Web SG
         SecurityGroupIngress: 
           - IpProtocol: tcp
-            FromPort: 80
-            ToPort: 80
+            FromPort: 8080
+            ToPort: 8080
             CidrIp: 0.0.0.0/0
           - IpProtocol: tcp
             FromPort: 443
@@ -117,7 +117,7 @@ Resources:
             Iops: 3000
             DeleteOnTermination: true
             VolumeSize: 8
-      ImageId: ami-0edf2e22c3a26885c
+      ImageId: ami-01dd271720c1ba44f
       InstanceType: t2.micro
       KeyName: cba_keypair2
       SecurityGroupIds: 
@@ -126,6 +126,23 @@ Resources:
       Tags: 
         - Key: Name
           Value: ProjectInstance01
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt-get update -y 
+          curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+            /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+          echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+            https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+            /etc/apt/sources.list.d/jenkins.list > /dev/null
+          sudo apt-get update -y 
+          sudo apt install openjdk-17-jre -y 
+          sudo apt-get install jenkins -y
+          apt-get update -y
+          sudo systemctl enable jenkins
+          sudo systemctl start jenkins
+          sudo systemctl status jenkins
+          cat /var/lib/jenkins/secrets/initialAdminPassword
 
   WebInstanceB:
       Type: AWS::EC2::Instance
@@ -137,7 +154,7 @@ Resources:
               Iops: 3000
               DeleteOnTermination: true
               VolumeSize: 8
-        ImageId: ami-0edf2e22c3a26885c
+        ImageId: ami-01dd271720c1ba44f
         InstanceType: t2.micro
         KeyName: cba_keypair2
         SecurityGroupIds: 
